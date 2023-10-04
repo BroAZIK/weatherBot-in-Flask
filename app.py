@@ -1,26 +1,175 @@
 from flask import Flask, request
 from telegram import Bot, Update
-from telegram.ext import Dispatcher, CommandHandler
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
 import handlers
 from dotenv import load_dotenv
 import os
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import CallbackContext
+import requests
+from pprint import pprint
+import os
+from tinydb import TinyDB, Query
+from tinydb.table import Document
 
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    Dispatcher,
-    MessageHandler,
-    Filters
-)
-from handlers import(
-    start,
-    hozir,
-    first,
-    hourly,
-    upd,
-    Aloqa
+db = TinyDB('db.json',indent=4)
 
+
+
+from details.buttons import (
+    menu,
+    location,
+    upg_location
 )
+
+from details.messages import(
+    Hozirgi_mes,
+    Aloqa_mes
+)
+
+
+
+
+
+API_KEY = "28dc01ee165eb8b2d366fd571988a069"
+URL = "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}"
+Hourly = "https://pro.openweathermap.org/data/2.5/forecast/hourly?lat={lat}&lon={lon}&appid={API_KEY}"
+
+def first(update: Update, context: CallbackContext):
+
+    text = "Sizga ob-havoni ko'rsatishim uchun, Menga: lokatsiya yuboring! ⛔️"
+
+    update.message.reply_html(
+        text=text,
+        reply_markup=ReplyKeyboardMarkup(location, resize_keyboard=True)
+    )
+
+def start(update: Update, context: CallbackContext):
+
+    text = 'Kerakli buyruqni tanlang👇🏻'
+
+    update.message.reply_html(
+        text=text,
+        reply_markup=ReplyKeyboardMarkup(menu, resize_keyboard=True)
+    )
+
+    chat_id = update.message.chat.id
+
+
+
+    lat = update.message.location.latitude
+    lon = update.message.location.longitude
+    
+    User = Query()
+
+
+    result = db.search(User.chat_id==chat_id)
+
+    if result != []:
+        doc = Document(
+            value = {"chat_id":chat_id,"lat":lat,"lon":lon},
+            doc_id=chat_id
+            )
+
+        db.update(doc)
+
+    else:
+
+        doc = Document(
+        value = {"chat_id":chat_id,"lat":lat,"lon":lon},
+        doc_id=chat_id
+        )
+
+        db.insert(doc)
+
+def hozir(update: Update, context: CallbackContext):
+
+
+    chat_id = update.message.chat.id
+
+    User = Query()
+
+    result = db.search(User.chat_id==chat_id)
+
+    print(result)
+
+    lat = result[0]['lat']
+    lon = result[0]['lon']
+
+    print(lat, lon)
+
+    print(result)
+
+    url = URL.format(lat=lat, lon=lon, API_KEY=API_KEY)
+    response = requests.get(url)
+    data = response.json()
+
+
+    pprint(data)
+
+    shahar = data['name']
+
+    osmon = data['weather'][0]['main']
+    harorat1 = data['main']['temp']-273.15
+    harorat = round(harorat1, 1)
+    tuyuladi1 = data["main"]["feels_like"] - 273.15  
+    tuyuladi = round(tuyuladi1, 1)
+
+    bulutlar = data['clouds']['all'] 
+    Namlik = data["main"]["humidity"]
+    Shamol = data["wind"]["speed"]
+    Bosim = data['main']['pressure']
+    
+    update.message.reply_text(
+        text=Hozirgi_mes.format(shahar,osmon,harorat,tuyuladi,bulutlar,Namlik,Shamol,Bosim)
+    )
+
+def hourly(update: Update, context: CallbackContext):
+
+    chat_id = update.message.chat.id
+
+    User = Query()
+
+    result = db.search(User.chat_id==chat_id)
+
+    lat = result[0]['lat']
+    lon = result[0]['lon']
+
+    print(result)
+
+    url = Hourly.format(lat=lat, lon=lon, API_KEY=API_KEY)
+    response = requests.get(url)
+    data = response.json()
+
+
+    pprint(data)
+
+def upd(update: Update, context: CallbackContext):
+
+
+    update.message.reply_html(
+        text="Yangi Joylashuvni Yuboring⚠️",
+        reply_markup=ReplyKeyboardMarkup(upg_location,resize_keyboard=True)
+    )
+
+def after_upd(update: Update):
+
+    text = 'Joylashuv Yangilandi✅'
+
+    update.message.reply_html(
+        text=text,
+        reply_markup=ReplyKeyboardMarkup(menu, resize_keyboard=True)
+    )
+
+def Aloqa(update: Update, context: CallbackContext):
+
+    first_name = update.effective_user.first_name
+
+    update.message.reply_text(
+        text=Aloqa_mes.format(first_name)
+    )
+
+
 
 
 load_dotenv()
