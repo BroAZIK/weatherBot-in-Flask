@@ -1,9 +1,6 @@
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
-import handlers
-from dotenv import load_dotenv
-import os
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 import requests
@@ -172,8 +169,7 @@ def Aloqa(update: Update, context: CallbackContext):
 
 
 
-load_dotenv()
-TOKEN = os.environ.get('TOKEN')
+TOKEN = "5809174742:AAHpxyhptxdSJUm4IOvNFWchEVWxttg5Nvg"
 
 print('TOKEN:', TOKEN)
 
