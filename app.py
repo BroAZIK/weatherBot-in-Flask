@@ -169,7 +169,7 @@ def Aloqa(update: Update, context: CallbackContext):
 
 
 
-TOKEN = "5809174742:AAHpxyhptxdSJUm4IOvNFWchEVWxttg5Nvg"
+TOKEN = "5809174742:AAGbE9O4S8BzeOjsy9Ycu4ibGld658Y8HcY"
 
 print('TOKEN:', TOKEN)
 
@@ -186,6 +186,8 @@ def webhook():
         return "webhook is running...!"
     
     if request.method == 'POST':
+
+        print("Post keldi")
         
         body = request.get_json()
         

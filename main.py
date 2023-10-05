@@ -17,7 +17,7 @@ from handlers import(
 
 import os
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = "5809174742:AAGbE9O4S8BzeOjsy9Ycu4ibGld658Y8HcY"
 
 updater: Updater = Updater(token=TOKEN)
 
